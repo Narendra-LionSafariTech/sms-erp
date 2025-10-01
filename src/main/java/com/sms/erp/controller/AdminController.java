@@ -1,11 +1,13 @@
 package com.sms.erp.controller;
 
+import com.sms.erp.dto.LoginRequest;
 import com.sms.erp.entity.AdminSchool;
 import com.sms.erp.entity.Staff;
 import com.sms.erp.repository.AdminRepository;
 import com.sms.erp.repository.AdminSchoolRepository;
 import com.sms.erp.service.CloudinaryService;
 import com.sms.erp.service.IdGeneratorService;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -104,4 +106,35 @@ public class AdminController {
                 )
         ));
     }
+    @PostMapping("/login")
+    public ResponseEntity<?> loginAdmin(@RequestBody LoginRequest request) {
+        Optional<Staff> adminOpt = adminRepository.findByEmail(request.getEmail());
+        if (adminOpt.isEmpty()) {
+            return ResponseEntity.status(401).body(Map.of("message", "Invalid email or password"));
+        }
+
+        Staff admin = adminOpt.get();
+
+        if (!passwordEncoder.matches(request.getPassword(), admin.getPassword())) {
+            return ResponseEntity.status(401).body(Map.of("message", "Invalid email or password"));
+        }
+
+        if (admin.getActive() != null && !admin.getActive()) {
+            return ResponseEntity.status(403).body(Map.of("message", "Admin account is deactivated"));
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Login successful",
+                "admin", Map.of(
+                        "id", admin.getId(),
+                        "name", admin.getFirstName() + " " + admin.getLastName(),
+                        "email", admin.getEmail(),
+                        "role", admin.getRole(),
+                        "schoolId", admin.getSchool().getId(),
+                        "staffRegNo", admin.getStaffRegNo()
+                )
+        ));
+    }
+
+
 }
