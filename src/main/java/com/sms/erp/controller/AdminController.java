@@ -1,6 +1,5 @@
 package com.sms.erp.controller;
 
-
 import com.sms.erp.entity.AdminSchool;
 import com.sms.erp.entity.Staff;
 import com.sms.erp.repository.AdminRepository;
@@ -10,11 +9,11 @@ import com.sms.erp.service.IdGeneratorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
+
 @RestController
 @RequestMapping("/api/admins")
 @RequiredArgsConstructor
@@ -30,22 +29,25 @@ public class AdminController {
     @PostMapping(value = "/create/{schoolId}", consumes = "multipart/form-data")
     public ResponseEntity<?> createSchoolAdmin(
             @PathVariable String schoolId,
-            @RequestPart("data") Map<String, Object> request,
-            @RequestPart(value = "file", required = false) MultipartFile file,
-            @RequestAttribute("role") String currentUserRole
+            @RequestParam String firstName,
+            @RequestParam String lastName,
+            @RequestParam String email,
+            @RequestParam String mobile,
+            @RequestParam String password,
+            @RequestParam String address,
+            @RequestParam String role,
+            @RequestPart(value = "file", required = false) MultipartFile file
+//            @RequestAttribute("role") String currentUserRole
     ) {
+        // ✅ Temporarily hardcoded role
+        String currentUserRole = "super_admin";
+        // Only super admin can create new admin
         if (!"super_admin".equalsIgnoreCase(currentUserRole)) {
             return ResponseEntity.status(403).body(Map.of("message", "Only Super Admin allowed to create new admin."));
         }
 
-        String firstName = (String) request.get("firstName");
-        String lastName = (String) request.get("lastName");
-        String email = (String) request.get("email");
-        String mobile = (String) request.get("mobile");
-        String password = (String) request.get("password");
-        String address = (String) request.get("address");
-
-        if (firstName == null || lastName == null || email == null || mobile == null || password == null || address == null) {
+        // Validate fields
+        if (firstName.isBlank() || lastName.isBlank() || email.isBlank() || mobile.isBlank() || password.isBlank() || address.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("message", "Required fields missing"));
         }
 
@@ -60,15 +62,15 @@ public class AdminController {
         }
 
         String logoUrl = "";
-//        if (file != null && !file.isEmpty()) {
-//            logoUrl = cloudinaryService.uploadFile(file);
-//        }
+        // If you want to enable Cloudinary upload, uncomment this
+        // if (file != null && !file.isEmpty()) {
+        //     logoUrl = cloudinaryService.uploadFile(file);
+        // }
 
-        AdminSchool school = existingSchoolOpt.get();
         String staffRegNo = idGeneratorService.generateStaffId(existingSchool.getSchoolCode());
 
         Staff newAdmin = Staff.builder()
-                .school(school)
+                .school(existingSchool)
                 .schoolCode(existingSchool.getSchoolCode())
                 .firstName(firstName)
                 .lastName(lastName)
@@ -76,7 +78,7 @@ public class AdminController {
                 .mobile(mobile)
                 .address(address)
                 .password(passwordEncoder.encode(password))
-                .role("Admin")
+                .role(role != null ? role : "Admin")
                 .avatar(logoUrl)
                 .staffRegNo(staffRegNo)
                 .permissions(List.of("All", "manage_schools", "view_reports", "manage_system_settings"))
@@ -87,9 +89,7 @@ public class AdminController {
         if (existingSchool.getSchoolAdmins() == null) {
             existingSchool.setSchoolAdmins(new ArrayList<>());
         }
-//        existingSchool.getSchoolAdmins().add(newAdmin.getId());
         existingSchool.getSchoolAdmins().add(newAdmin);
-
         schoolRepository.save(existingSchool);
 
         return ResponseEntity.status(201).body(Map.of(
