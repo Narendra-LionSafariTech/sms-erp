@@ -1,5 +1,6 @@
 package com.sms.erp.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.*;
 import org.springframework.data.annotation.*;
 import org.springframework.data.mongodb.core.mapping.*;
@@ -20,6 +21,7 @@ public class SchoolClass {
     private String id;
 
     // Reference to AdminSchool
+    @JsonBackReference
     @DBRef
     private AdminSchool school;
 

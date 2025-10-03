@@ -17,7 +17,7 @@ import java.time.Instant;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/v1/students")
+@RequestMapping("/api/v1.0/students")
 public class StudentController {
 
     @Autowired

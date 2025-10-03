@@ -1,5 +1,6 @@
 package com.sms.erp.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -71,6 +72,7 @@ public class AdminSchool {
     private Date otpCreatedAt;
     private String otp;
     // in AdminSchool.java
+    @JsonManagedReference
     @DBRef
     private List<Staff> schoolAdmins = new ArrayList<>();
 
