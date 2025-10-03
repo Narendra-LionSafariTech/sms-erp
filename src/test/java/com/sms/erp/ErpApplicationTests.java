@@ -17,6 +17,7 @@ class ErpApplicationTests {
 
 	@Mock
 	private AdminRepository staffRepository;
+
 	@Test
 	void contextLoads() {
 	}
